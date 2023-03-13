@@ -1,25 +1,36 @@
-from sklearn.feature_extraction.text import TfidfTransformer
-from sklearn.feature_extraction.text import CountVectorizer
-import pandas as pd
-from sklearn.feature_extraction.text import TfidfTransformer
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
+from api.models import ResumeSkills, Resumes
 
 
 @api_view(['GET'])
-def calcTFIDF(request):
+def get_my_resume(request):
+    resume_id = request.query_params['resume_id']
 
-    dataset = [
-        "AAAA BBB",
-        "CCC"
-    ]
+    resume = Resumes.objects.get(id=resume_id)
 
-    tfIdfTransformer = TfidfTransformer(use_idf=True)
-    countVectorizer = CountVectorizer()
-    wordCount = countVectorizer.fit_transform(dataset)
-    newTfIdf = tfIdfTransformer.fit_transform(wordCount)
-    df = pd.DataFrame(newTfIdf[0].T.todense(
-    ), index=countVectorizer.get_feature_names_out(), columns=["TF-IDF"])
-    df = df.sort_values('TF-IDF', ascending=False)
+    resumeSkills = resume.resumeskills_set.all()
 
-    return Response({'idfs': newTfIdf})
+    data = {
+        "id": resume.id,
+        "title": resume.title,
+        "name": resume.name,
+        "email": resume.email,
+        "phone_number": resume.phone_number,
+        "user_id": resume.user_id,
+        "location": resume.m_location.name,
+        "resume_skills": resumeSkills.values('m_skill__id', 'm_skill__name'),
+    }
+
+    return Response(data)
+
+
+@api_view(['GET'])
+def get_all_jobs(request):
+
+    rows = Resumes.objects.all()
+    list_data = []
+    for x in rows:
+        list_data.append({"id": x.id, "name": x.name, "email": x.email})
+
+    return Response(list_data)
