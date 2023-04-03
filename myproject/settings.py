@@ -81,7 +81,8 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'cv-rs',
                 'USER': 'root',
-                'PASSWORD': '',
+                'PASSWORD': 'Baopham1!', # Laptop Acer
+                # 'PASSWORD': '', # Máy bàn
                 'HOST': '127.0.0.1',
                 'PORT': '3306',
     }
