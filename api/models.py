@@ -1,5 +1,6 @@
 from django.db import models
 
+
 class Users(models.Model):
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=255)
@@ -10,6 +11,7 @@ class Users(models.Model):
     class Meta:
         db_table = 'users'
 
+
 class MEducationLevels(models.Model):
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=255)
@@ -17,6 +19,7 @@ class MEducationLevels(models.Model):
 
     class Meta:
         db_table = 'm_education_levels'
+
 
 class MExperiences(models.Model):
     id = models.AutoField(primary_key=True)
@@ -26,6 +29,7 @@ class MExperiences(models.Model):
     class Meta:
         db_table = 'm_experiences'
 
+
 class MJobs(models.Model):
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=255)
@@ -33,12 +37,14 @@ class MJobs(models.Model):
     class Meta:
         db_table = 'm_jobs'
 
+
 class MLocations(models.Model):
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=255)
 
     class Meta:
         db_table = 'm_locations'
+
 
 class MSalaries(models.Model):
     id = models.AutoField(primary_key=True)
@@ -63,6 +69,7 @@ class MWorkingForms(models.Model):
     class Meta:
         db_table = 'm_working_forms'
 
+
 class Resumes(models.Model):
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=255)
@@ -74,12 +81,14 @@ class Resumes(models.Model):
 
     user = models.ForeignKey(Users, on_delete=models.CASCADE)
     m_location = models.ForeignKey(MLocations, on_delete=models.CASCADE)
-    m_education_level = models.ForeignKey(MEducationLevels, on_delete=models.CASCADE)
+    m_education_level = models.ForeignKey(
+        MEducationLevels, on_delete=models.CASCADE)
     m_experience = models.ForeignKey(MExperiences, on_delete=models.CASCADE)
     m_working_form = models.ForeignKey(MWorkingForms, on_delete=models.CASCADE)
 
     class Meta:
         db_table = 'resumes'
+
 
 class ResumeSkills(models.Model):
     id = models.AutoField(primary_key=True)
@@ -88,6 +97,7 @@ class ResumeSkills(models.Model):
 
     class Meta:
         db_table = 'resume_skills'
+
 
 class Companies(models.Model):
     id = models.AutoField(primary_key=True)
@@ -112,7 +122,8 @@ class Jobs(models.Model):
     company = models.ForeignKey(Companies, on_delete=models.CASCADE)
     m_working_form = models.ForeignKey(MWorkingForms, on_delete=models.CASCADE)
     m_location = models.ForeignKey(MLocations, on_delete=models.CASCADE)
-    m_education_level = models.ForeignKey(MEducationLevels, on_delete=models.CASCADE)
+    m_education_level = models.ForeignKey(
+        MEducationLevels, on_delete=models.CASCADE)
     m_experience = models.ForeignKey(MExperiences, on_delete=models.CASCADE)
     m_salary = models.ForeignKey(MSalaries, on_delete=models.CASCADE)
 
@@ -128,14 +139,15 @@ class JobSkills(models.Model):
     class Meta:
         db_table = 'job_skills'
 
-class UserInteractionJob(models.Model):
+
+class UserInteractionJobs(models.Model):
     id = models.AutoField(primary_key=True)
     number_of_click = models.IntegerField()
     applied = models.IntegerField()
     liked = models.IntegerField()
-    rating = models.FloatField() 
+    rating = models.FloatField()
     user = models.ForeignKey(Users, on_delete=models.CASCADE)
     job = models.ForeignKey(Jobs, on_delete=models.CASCADE)
 
     class Meta:
-        db_table = 'user_interaction_job'
+        db_table = 'user_interaction_jobs'
