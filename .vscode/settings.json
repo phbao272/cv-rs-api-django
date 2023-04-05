@@ -4,6 +4,8 @@
     "iloc",
     "jobskills",
     "kneighbors",
+    "matplotlib",
+    "pyplot",
     "resumeskills",
     "TFIDF",
     "vectorizer"
