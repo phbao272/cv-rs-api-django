@@ -85,6 +85,7 @@ class Resumes(models.Model):
         MEducationLevels, on_delete=models.CASCADE)
     m_experience = models.ForeignKey(MExperiences, on_delete=models.CASCADE)
     m_working_form = models.ForeignKey(MWorkingForms, on_delete=models.CASCADE)
+    m_job = models.ForeignKey(MJobs, on_delete=models.CASCADE)
 
     class Meta:
         db_table = 'resumes'
@@ -126,6 +127,7 @@ class Jobs(models.Model):
         MEducationLevels, on_delete=models.CASCADE)
     m_experience = models.ForeignKey(MExperiences, on_delete=models.CASCADE)
     m_salary = models.ForeignKey(MSalaries, on_delete=models.CASCADE)
+    m_job = models.ForeignKey(MJobs, on_delete=models.CASCADE)
 
     class Meta:
         db_table = 'jobs'

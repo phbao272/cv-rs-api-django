@@ -30,6 +30,7 @@ def getDataResume():
             "education_level_name": resume.m_education_level.name,
             "experience_name": resume.m_experience.name,
             "working_form_name": resume.m_working_form.name,
+            "job_name": resume.m_job.name,
 
             "skills": skills,
         }

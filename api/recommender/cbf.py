@@ -20,7 +20,6 @@ def getByCBF(request):
     cbf_score.sort(key=lambda x: x["similarity"], reverse=True)
 
     return Response(cbf_score)
-    # return Response({"resume": resume, "jobs": jobs})
 
 
 def cbf(resume_skill, jobs):
@@ -44,7 +43,7 @@ def similarity_cbf(resume_skill_ids, job_skill_ids):
     doc = [convertSkillToText(resume_skill_ids),
            convertSkillToText(job_skill_ids)]
 
-    print("doc", doc)
+    # print("doc", doc)
 
     # Create a CountVectorizer object and fit it to the documents
     count_vectorizer = CountVectorizer()
@@ -57,7 +56,7 @@ def similarity_cbf(resume_skill_ids, job_skill_ids):
     # Calculate the cosine similarity between the two documents
     cosine_sim = cosine_similarity(tfidf_matrix[0], tfidf_matrix[1])[0][0]
 
-    print("The similarity score between the two lists of skills is:", cosine_sim)
+    # print("The similarity score between the two lists of skills is:", cosine_sim)
 
     return cosine_sim
 

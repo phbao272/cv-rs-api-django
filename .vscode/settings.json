@@ -7,7 +7,9 @@
     "matplotlib",
     "pyplot",
     "resumeskills",
+    "scipy",
     "TFIDF",
+    "toarray",
     "vectorizer"
   ]
 }

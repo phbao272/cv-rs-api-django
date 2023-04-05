@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from sklearn.neighbors import NearestNeighbors
 from api.models import UserInteractionJobs
+from scipy.sparse import csr_matrix
 
 
 @api_view(['GET'])
@@ -18,24 +19,35 @@ def getByCF(request):
     return Response(cf_score)
 
 
-def cf(norm_matrix, user_id, k=1):
-    model_knn = NearestNeighbors(metric='cosine', algorithm='brute')
-    model_knn.fit(norm_matrix)
+def cf(norm_matrix, user_id, k=2):
+    sparse_df = csr_matrix(norm_matrix.values)
+    print(sparse_df)
 
-    distances, indices = model_knn.kneighbors(
-        norm_matrix.iloc[user_id-1, :].values.reshape(1, -1), n_neighbors=k+1)
+    knn_model = NearestNeighbors(metric='cosine', algorithm='brute')
+    knn_model.fit(sparse_df)
 
-    # print(distances)
-    # print(indices)
+    similar_users, distances = get_similar_users(
+        knn_model, norm_matrix, user_id, n=k)
 
-    top_k_indices = indices.flatten()[1:]
+    print(similar_users)
+    print(distances)
 
-    top_k_distances = distances.flatten()[1:]
+    return similar_users
 
-    print(top_k_indices)
-    print(top_k_distances)
 
-    return "1"
+def get_similar_users(knn_model, matrix_df, user_id, n=5):
+    # input to this function is the user and number of top similar users you want.
+
+    knn_input = np.asarray([matrix_df.values[user_id-1]])  # .reshape(1,-1)
+
+    distances, indices = knn_model.kneighbors(knn_input, n_neighbors=n+1)
+
+    print("Top", n, "users who are very much similar to the User-", user_id, "are: ")
+    print(" ")
+    for i in range(1, len(distances[0])):
+        print(i, ". User:", indices[0][i]+1,
+              "separated by distance of", distances[0][i])
+    return indices.flatten()[1:] + 1, distances.flatten()[1:]
 
 
 def utility_matrix(data):
@@ -53,11 +65,8 @@ def normalized_utility_matrix(data):
 
     u_matrix = utility_matrix(data)
     norm_matrix = u_matrix.copy()
-    print(u_matrix)
 
     for i, user in enumerate(users):
-        # print('xx',  u_matrix.loc[user])
-
         mu[i] = np.mean(u_matrix.loc[user][u_matrix.loc[user] > 0])
 
         # Trừ giá trị trung bình từ các giá trị khác trong hàng tương ứng nhưng bỏ qua các giá trị bằng 0
