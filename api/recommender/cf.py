@@ -5,49 +5,57 @@ from rest_framework.decorators import api_view
 from sklearn.neighbors import NearestNeighbors
 from api.models import UserInteractionJobs
 from scipy.sparse import csr_matrix
+from sklearn.metrics.pairwise import cosine_similarity
 
 
 @api_view(['GET'])
 def getByCF(request):
+    user_id = request.query_params['user_id']
+
+    print("user_id", user_id)
 
     data = getInteraction()
 
     norm_matrix = normalized_utility_matrix(data)
 
-    cf_score = cf(norm_matrix, 1)
+    cf_score = cf(norm_matrix)
 
-    return Response(cf_score)
+    knn = getKNN(cf_score, user_id, k=5)
+
+    return Response(knn)
 
 
-def cf(norm_matrix, user_id, k=2):
+def cosine_similarity_matrix(matrix):
+
+    # Create matrix with zeros row x row
+    similarity_matrix = np.zeros((matrix.shape[0], matrix.shape[0]))
+
+    for i in range(matrix.shape[0]):
+        for j in range(matrix.shape[0]):
+            if i != j:
+                # Calculate cosine similarity between row i and row j
+                # matrix[i].reshape(1, -1) được sử dụng để biến đổi ma trận 1 chiều matrix[i]
+                # thành ma trận 2 chiều với 1 hàng và số cột bằng với số lượng phần tử của matrix[i].
+                similarity_matrix[i][j] = cosine_similarity(matrix[i].reshape(
+                    1, -1), matrix[j].reshape(1, -1))
+            else:
+                similarity_matrix[i][j] = 1
+    return similarity_matrix
+
+
+def cf(norm_matrix: pd.DataFrame):
+    print(norm_matrix)
     sparse_df = csr_matrix(norm_matrix.values)
-    print(sparse_df)
 
-    knn_model = NearestNeighbors(metric='cosine', algorithm='brute')
-    knn_model.fit(sparse_df)
+    norm_matrix_index = norm_matrix.index
 
-    similar_users, distances = get_similar_users(
-        knn_model, norm_matrix, user_id, n=k)
+    similarity_matrix = cosine_similarity_matrix(
+        sparse_df)
 
-    print(similar_users)
-    print(distances)
+    similarity_matrix_df = pd.DataFrame(
+        similarity_matrix, index=norm_matrix_index, columns=norm_matrix_index)
 
-    return similar_users
-
-
-def get_similar_users(knn_model, matrix_df, user_id, n=5):
-    # input to this function is the user and number of top similar users you want.
-
-    knn_input = np.asarray([matrix_df.values[user_id-1]])  # .reshape(1,-1)
-
-    distances, indices = knn_model.kneighbors(knn_input, n_neighbors=n+1)
-
-    print("Top", n, "users who are very much similar to the User-", user_id, "are: ")
-    print(" ")
-    for i in range(1, len(distances[0])):
-        print(i, ". User:", indices[0][i]+1,
-              "separated by distance of", distances[0][i])
-    return indices.flatten()[1:] + 1, distances.flatten()[1:]
+    return similarity_matrix_df
 
 
 def utility_matrix(data):
@@ -87,3 +95,40 @@ def getInteraction():
     interaction = UserInteractionJobs.objects.all()
 
     return list(interaction.values())
+
+
+def getKNN(similarity_matrix: pd.DataFrame, user_id, k=5):
+    print("similarity_matrix\n", similarity_matrix)
+
+    # Tìm các hàng trong ma trận tương đồng có giá trị lớn nhất
+    row_idx = similarity_matrix.loc[int(user_id)]
+
+    print("row_idx", row_idx)
+
+    similar_rows = row_idx.nlargest(k+1)[1:]
+
+    similar_dict = similar_rows.to_dict()
+
+    return similar_dict
+
+    # norm_matrix_1 = np.array([[2.4, 0, 0, 0, 0, -0.143333, 0.000000],
+    #                           [2, 0, 0, -2, 0, 0, 0],
+    #                           [0.00, 2.25, -0.75, 0, 0, -0.75, -0.75],
+    #                           [-1.17, -1.17, -0.17, 0.83,
+    #                            0.83, 0.000000, 0.83],
+    #                           [-0.75, -2.75, 1.25, 0, 0, 0.000000, 2.25],
+    #                           ])
+
+    # # Tạo DataFrame từ ma trận norm_matrix_1 với thông tin user_id và job_id
+    # user_ids = [1, 2, 3, 4, 5]
+    # job_ids = [11, 12, 13, 14, 15, 16, 17]
+
+    # df_norm = pd.DataFrame(norm_matrix_1, index=user_ids, columns=job_ids)
+
+    # # Chuyển đổi ma trận thành DataFrame pivot_table với user_id là index và job_id là column
+    # df_pivot = df_norm.reset_index().melt(id_vars=["index"], var_name="job_id")
+    # df_pivot.columns = ["user_id", "job_id", "rating"]
+    # df_pivot = df_pivot.pivot_table(
+    #     index="user_id", columns="job_id", values="rating")
+
+    # cf_score = cf(df_pivot, user_id)
