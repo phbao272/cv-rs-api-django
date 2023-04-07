@@ -3,19 +3,22 @@ import pandas as pd
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from sklearn.neighbors import NearestNeighbors
-from api.models import UserInteractionJobs
+from api.models import UserInteractionJobs, UserSimilarities
 from scipy.sparse import csr_matrix
 from sklearn.metrics.pairwise import cosine_similarity
 
 from api.serializers import UserSimilaritiesSerializer
+from django.db import transaction
 
 
 @api_view(['POST'])
 def store_similarity_matrix(request):
     data = {
-        'user_id': request.data.get('user_id'),
+        'user': request.data.get('user'),
         'user_similarity': request.data.get('user_similarity'),
     }
+
+    print("data", data)
 
     serializer = UserSimilaritiesSerializer(data=data)
 
@@ -29,9 +32,8 @@ def store_similarity_matrix(request):
 
 @api_view(['GET'])
 def getByCF(request):
+    # with transaction.atomic():
     user_id = request.query_params['user_id']
-
-    # print("user_id", user_id)
 
     data = getInteraction()
 
@@ -39,9 +41,33 @@ def getByCF(request):
 
     cf_score = cf(norm_matrix)
 
-    knn = getKNN(cf_score, user_id, k=5)
+    user_ids = norm_matrix.index
 
-    return Response(knn)
+    for i in user_ids:
+        print(i)
+
+        knn = getKNN(cf_score, user_id, k=5)
+
+        data = {
+            'user': user_id,
+            'user_similarity': str(knn),
+        }
+
+        updateOrCreate(user_id, str(knn))
+
+    return Response(user_ids)
+    # return Response(knn)
+
+
+def updateOrCreate(user_id, user_similarity):
+    obj, created = UserSimilarities.objects.update_or_create(
+        user_id=user_id,
+        defaults={
+            'user_similarity': user_similarity
+        }
+    )
+
+    # return obj, created
 
 
 def cf(norm_matrix: pd.DataFrame):
