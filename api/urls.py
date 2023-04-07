@@ -15,5 +15,7 @@ urlpatterns = [
     path('get-company-chart', job.getCompanyChart),
 
     path('get-by-cbf', cbf.getByCBF),
-    path('get-by-cf', cf.getByCF)
+    path('get-by-cf', cf.getByCF),
+
+    path('similarity-matrix', cf.store_similarity_matrix),
 ]

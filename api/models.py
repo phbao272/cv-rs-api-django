@@ -155,11 +155,10 @@ class UserInteractionJobs(models.Model):
         db_table = 'user_interaction_jobs'
 
 
-# class UserSimilarities(models.Model):
-#     id = models.AutoField(primary_key=True)
-#     user_1_id = models.ForeignKey(Users, on_delete=models.CASCADE)
-#     user_2_id = models.ForeignKey(Users, on_delete=models.CASCADE)
-#     similarity = models.FloatField()
+class UserSimilarities(models.Model):
+    id = models.AutoField(primary_key=True)
+    user = models.ForeignKey(Users, on_delete=models.CASCADE)
+    user_similarity = models.TextField()
 
-#     class Meta:
-#         db_table = 'user_similarities'
+    class Meta:
+        db_table = 'user_similarities'

@@ -7,12 +7,31 @@ from api.models import UserInteractionJobs
 from scipy.sparse import csr_matrix
 from sklearn.metrics.pairwise import cosine_similarity
 
+from api.serializers import UserSimilaritiesSerializer
+
+
+@api_view(['POST'])
+def store_similarity_matrix(request):
+    data = {
+        'user_id': request.data.get('user_id'),
+        'user_similarity': request.data.get('user_similarity'),
+    }
+
+    serializer = UserSimilaritiesSerializer(data=data)
+
+    if serializer.is_valid():
+        serializer.save()
+
+        return Response(serializer.data)
+
+    return Response(serializer.errors)
+
 
 @api_view(['GET'])
 def getByCF(request):
     user_id = request.query_params['user_id']
 
-    print("user_id", user_id)
+    # print("user_id", user_id)
 
     data = getInteraction()
 
@@ -23,6 +42,38 @@ def getByCF(request):
     knn = getKNN(cf_score, user_id, k=5)
 
     return Response(knn)
+
+
+def cf(norm_matrix: pd.DataFrame):
+    # print(norm_matrix)
+    sparse_df = csr_matrix(norm_matrix.values)
+
+    norm_matrix_index = norm_matrix.index
+
+    similarity_matrix = cosine_similarity_matrix(
+        sparse_df)
+
+    print(similarity_matrix.shape)
+
+    similarity_matrix_df = pd.DataFrame(
+        similarity_matrix, index=norm_matrix_index, columns=norm_matrix_index)
+
+    return similarity_matrix_df
+
+
+def getKNN(similarity_matrix: pd.DataFrame, user_id, k=5):
+    # print("similarity_matrix\n", similarity_matrix)
+
+    # Tìm các hàng trong ma trận tương đồng có giá trị lớn nhất
+    row_idx = similarity_matrix.loc[int(user_id)]
+
+    # print("row_idx", row_idx)
+
+    similar_rows = row_idx.nlargest(k+1)[1:]
+
+    similar_dict = similar_rows.to_dict()
+
+    return similar_dict
 
 
 def cosine_similarity_matrix(matrix):
@@ -41,29 +92,6 @@ def cosine_similarity_matrix(matrix):
             else:
                 similarity_matrix[i][j] = 1
     return similarity_matrix
-
-
-def cf(norm_matrix: pd.DataFrame):
-    print(norm_matrix)
-    sparse_df = csr_matrix(norm_matrix.values)
-
-    norm_matrix_index = norm_matrix.index
-
-    similarity_matrix = cosine_similarity_matrix(
-        sparse_df)
-
-    similarity_matrix_df = pd.DataFrame(
-        similarity_matrix, index=norm_matrix_index, columns=norm_matrix_index)
-
-    return similarity_matrix_df
-
-
-def utility_matrix(data):
-    df = pd.DataFrame(data)
-    df = df.pivot_table(index='user_id', columns='job_id', values='rating')
-    df = df.fillna(0)
-
-    return df
 
 
 def normalized_utility_matrix(data):
@@ -86,30 +114,23 @@ def normalized_utility_matrix(data):
 
     # print("u_matrix\n", u_matrix)
 
-    print("norm_matrix\n", norm_matrix)
+    # print("norm_matrix\n", norm_matrix)
 
     return norm_matrix
+
+
+def utility_matrix(data):
+    df = pd.DataFrame(data)
+    df = df.pivot_table(index='user_id', columns='job_id', values='rating')
+    df = df.fillna(0)
+
+    return df
 
 
 def getInteraction():
     interaction = UserInteractionJobs.objects.all()
 
     return list(interaction.values())
-
-
-def getKNN(similarity_matrix: pd.DataFrame, user_id, k=5):
-    print("similarity_matrix\n", similarity_matrix)
-
-    # Tìm các hàng trong ma trận tương đồng có giá trị lớn nhất
-    row_idx = similarity_matrix.loc[int(user_id)]
-
-    print("row_idx", row_idx)
-
-    similar_rows = row_idx.nlargest(k+1)[1:]
-
-    similar_dict = similar_rows.to_dict()
-
-    return similar_dict
 
     # norm_matrix_1 = np.array([[2.4, 0, 0, 0, 0, -0.143333, 0.000000],
     #                           [2, 0, 0, -2, 0, 0, 0],
