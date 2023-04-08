@@ -2,7 +2,7 @@ from django.urls import path
 
 from .analysis import resume, job
 from . import views
-from .recommender import cbf, cf
+from .recommender import cbf, cf, recommender
 
 urlpatterns = [
     path('get-my-resume', views.get_my_resume),
@@ -16,6 +16,7 @@ urlpatterns = [
 
     path('get-by-cbf', cbf.getByCBF),
     path('get-by-cf', cf.getByCF),
+    path('get-user-similarity', cf.getUserSimilarityById),
 
-    path('similarity-matrix', cf.store_similarity_matrix),
+    path('get-recommend', recommender.getRecommend)
 ]

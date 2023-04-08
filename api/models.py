@@ -162,3 +162,12 @@ class UserSimilarities(models.Model):
 
     class Meta:
         db_table = 'user_similarities'
+
+
+class CFUserJobs(models.Model):
+    id = models.AutoField(primary_key=True)
+    user = models.ForeignKey(Users, on_delete=models.CASCADE)
+    job_recommends = models.TextField()
+
+    class Meta:
+        db_table = 'cf_user_jobs'

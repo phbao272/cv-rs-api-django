@@ -10,19 +10,19 @@ from sklearn.feature_extraction.text import TfidfTransformer
 
 @api_view(['GET'])
 def getByCBF(request):
-    resume_id = request.query_params['resume_id']
+    user_id = request.query_params['user_id']
 
-    resume = getResumeById(resume_id)
+    res = cbf(user_id)
+
+    return Response(res)
+
+
+def cbf(user_id):
+    resume = getResumeById(user_id)
     jobs = getJobForResume(resume)
 
-    cbf_score = cbf(resume['resume_skills'], jobs)
+    resume_skill = resume['resume_skills']
 
-    cbf_score.sort(key=lambda x: x["similarity"], reverse=True)
-
-    return Response(cbf_score)
-
-
-def cbf(resume_skill, jobs):
     resume_skill_ids = [skill['m_skill__id'] for skill in resume_skill]
 
     for job in jobs:
@@ -35,7 +35,11 @@ def cbf(resume_skill, jobs):
         similarity = similarity_cbf(filter_resume_skill_ids, job_skill_ids)
         job['similarity'] = similarity
 
-    return jobs
+    jobs_sort = sorted(jobs, key=lambda x: x["similarity"], reverse=True)
+
+    n = min(20, len(jobs_sort))
+
+    return jobs_sort[:n]
 
 
 def similarity_cbf(resume_skill_ids, job_skill_ids):
@@ -61,9 +65,9 @@ def similarity_cbf(resume_skill_ids, job_skill_ids):
     return cosine_sim
 
 
-def getResumeById(resume_id):
+def getResumeById(user_id):
 
-    resume = Resumes.objects.get(pk=resume_id)
+    resume = Resumes.objects.get(user=user_id)
 
     resumeSkills = resume.resumeskills_set.all()
 
