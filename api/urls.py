@@ -11,12 +11,19 @@ urlpatterns = [
     path('get-all-resume', resume.getAllResume),
     path('get-all-company', job.getAllCompany),
 
-    path('get-resume-chart', resume.getResumeChart),
-    path('get-company-chart', job.getCompanyChart),
-
     path('get-by-cbf', cbf.getByCBF),
     path('get-by-cf', cf.getByCF),
     path('get-user-similarity', cf.getUserSimilarityById),
 
-    path('get-recommend', recommender.getRecommend)
+    path('get-recommend', recommender.getRecommend),
+
+    path('similarity-matrix', cf.createDataSimilarity),
+
+
+
+
+    # Chart
+    path('get-resume-chart', resume.getResumeChart),
+    path('get-company-chart', job.getCompanyChart),
+    path('get-pie-chart', resume.pieChart),
 ]

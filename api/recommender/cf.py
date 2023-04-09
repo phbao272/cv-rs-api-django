@@ -49,6 +49,7 @@ def cf(user_id: int):
     return job_recommends
 
 
+@api_view(['POST'])
 def createDataSimilarity():
     with transaction.atomic():
         data = getInteraction()

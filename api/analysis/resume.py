@@ -91,3 +91,22 @@ def convertSkillToText(skills):
         text += skill['m_skill__name']
 
     return text
+
+
+@api_view(['GET'])
+def pieChart(request):
+    labels = ['Label 1', 'Label 2', 'Label 3', 'Label 4']
+    sizes = [15, 30, 45, 10]
+
+    plt.pie(sizes, labels=labels)
+    plt.axis('equal')
+
+    plt.title('Biểu đồ cột thống kê số lượng ứng viên theo kinh nghiệm')
+    plt.xlabel('Kinh nghiệm', fontsize=12)
+    plt.ylabel('Số lượng', fontsize=12)
+
+    response = HttpResponse(content_type='image/png')
+    plt.savefig(response, format='png')
+    plt.close()
+
+    return response
