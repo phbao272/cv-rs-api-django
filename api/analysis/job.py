@@ -25,7 +25,7 @@ def getDataCompany():
     for company in companies:
         job = Jobs.objects.filter(company=company.id).values()
 
-        print(job)
+        # print(job)
 
         d = {
             "id": company.id,
@@ -44,6 +44,8 @@ def getCompanyChart(request):
     data = getDataCompany()
 
     df = pd.DataFrame(data)
+
+    print(df)
 
     ax = df.plot(kind='bar', x='name', y='count_job')
 

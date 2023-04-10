@@ -23,21 +23,33 @@ def getRecommend(request):
         case "case-1":  # case-1: user chưa đủ tương tác và chưa có CV ==> Hot Job
             print("case-1")
             result = recommendHotJob()
+
+            for job in result:
+                print(job["title"],
+                      " - interaction-score:", job["interaction_score"])
         case "case-2":  # case-2: user chưa đủ tương tác và có CV ==> 20% random + 80% CBF
             print("case-2")
-
             result = case2(user_id)
 
+            for job in result:
+                print(job["title"],
+                      " - similarity:", job["similarity"])
         case "case-3":  # case-3: user đủ tương tác và chưa có CV ===> 20% random + 80% CF
             print("case-3")
 
             result = case3(user_id)
-            # recommend_ids = [job["id"] for job in cf_recommend]
+            for job in result:
+                print(job["title"],
+                      " - mean rating:", job["mean_rating"])
 
         case "case-4":  # case-4: user đủ tương tác và có CV ===> 20% random + 80% PageRank
             print("case-4")
 
             result = case4(user_id)
+
+            for job in result:
+                print(job["title"],
+                      " - page rank score:", job["page_rank_score"])
         case _:
             print("default")
 
@@ -189,6 +201,7 @@ def case2(user_id):
     res = []
 
     for job in job_recommends:
+        similarity = None
         for job_cbf in cbf_recommend:
             if job.id == job_cbf["id"]:
                 similarity = job_cbf["similarity"]
@@ -196,7 +209,7 @@ def case2(user_id):
 
         d = objJob(job)
 
-        d["similarity"] = similarity if similarity else -999
+        d["similarity"] = similarity if similarity != None else -999
 
         res.append(d)
 

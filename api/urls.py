@@ -1,6 +1,6 @@
 from django.urls import path
 
-from .analysis import resume, job
+from .analysis import resume, job, interaction
 from . import views
 from .recommender import cbf, cf, recommender
 
@@ -26,4 +26,5 @@ urlpatterns = [
     path('get-resume-chart', resume.getResumeChart),
     path('get-company-chart', job.getCompanyChart),
     path('get-resume-pie-chart', resume.getResumePieChart),
+    path('get-interaction-chart', interaction.getInteractionChart),
 ]
