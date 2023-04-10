@@ -1,10 +1,11 @@
+import matplotlib.pyplot as plt
 from django.http import HttpResponse
 import pandas as pd
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from api.models import Resumes, Jobs, Companies
-import matplotlib.pyplot as plt
-from rest_framework.response import Response
+import matplotlib
+matplotlib.use('Agg')
 
 
 def getDataResume():
@@ -72,6 +73,32 @@ def getResumeChart(request):
     plt.title('Biểu đồ cột thống kê số lượng ứng viên theo kinh nghiệm')
     plt.xlabel('Kinh nghiệm', fontsize=12)
     plt.ylabel('Số lượng', fontsize=12)
+
+    response = HttpResponse(content_type='image/png')
+    plt.savefig(response, format='png')
+    plt.close()
+
+    return response
+
+
+@api_view(['GET'])
+def getResumePieChart(request):
+    data = getDataResume()
+
+    df = pd.DataFrame(data)
+
+    rating_count_df = pd.DataFrame(df.groupby(
+        ['experience_name']).size(), columns=['count'])
+
+    labels = rating_count_df.index
+    sizes = rating_count_df['count']
+
+    print(labels)
+    print(sizes)
+
+    plt.pie(sizes, labels=labels, autopct='%1.1f%%')
+
+    plt.title('Biểu đồ tròn thống kê số lượng ứng viên theo kinh nghiệm')
 
     response = HttpResponse(content_type='image/png')
     plt.savefig(response, format='png')

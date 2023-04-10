@@ -50,7 +50,7 @@ def cf(user_id: int):
 
 
 @api_view(['POST'])
-def createDataSimilarity():
+def createDataSimilarity(request):
     with transaction.atomic():
         data = getInteraction()
 

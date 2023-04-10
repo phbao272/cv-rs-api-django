@@ -25,5 +25,5 @@ urlpatterns = [
     # Chart
     path('get-resume-chart', resume.getResumeChart),
     path('get-company-chart', job.getCompanyChart),
-    path('get-pie-chart', resume.pieChart),
+    path('get-resume-pie-chart', resume.getResumePieChart),
 ]
