@@ -27,4 +27,6 @@ urlpatterns = [
     path('get-company-chart', job.getCompanyChart),
     path('get-resume-pie-chart', resume.getResumePieChart),
     path('get-interaction-chart', interaction.getInteractionChart),
+    path('get-user-interaction-chart', interaction.getUserInteractionChart),
+    path('check-info', interaction.checkInfo)
 ]
