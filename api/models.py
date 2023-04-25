@@ -171,3 +171,12 @@ class CFUserJobs(models.Model):
 
     class Meta:
         db_table = 'cf_user_jobs'
+
+
+class HopeJobs(models.Model):
+    id = models.AutoField(primary_key=True)
+    user = models.ForeignKey(Users, on_delete=models.CASCADE)
+    hope_jobs = models.TextField()
+
+    class Meta:
+        db_table = 'hope_jobs'

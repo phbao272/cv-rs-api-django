@@ -20,7 +20,7 @@ urlpatterns = [
     path('similarity-matrix', cf.createDataSimilarity),
 
 
-
+    path('get-hope-job', recommender.getHopeJob),
 
     # Chart
     path('get-resume-chart', resume.getResumeChart),

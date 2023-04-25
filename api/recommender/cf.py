@@ -44,6 +44,9 @@ def getByCF(request):
 def cf(user_id: int):
     user_jobs = CFUserJobs.objects.filter(user=user_id).first()
 
+    if (user_jobs is None):
+        return []
+
     job_recommends = ast.literal_eval(user_jobs.job_recommends)
 
     return job_recommends

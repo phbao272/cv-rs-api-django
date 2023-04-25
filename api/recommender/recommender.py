@@ -1,4 +1,5 @@
 
+import math
 import random
 
 import numpy as np
@@ -7,7 +8,7 @@ from django.db.models import Sum
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
-from api.models import Jobs, Resumes, UserInteractionJobs
+from api.models import HopeJobs, Jobs, Resumes, UserInteractionJobs
 
 from .cbf import cbf
 from .cf import cf
@@ -19,44 +20,164 @@ def getRecommend(request):
 
     case = checkCase(user_id)
 
+    # print("CASEEEEE", case)
+
+    # print("case 2")
+    # result_2 = case2(user_id)
+    # for job in result_2:
+    #     print(job["title"],
+    #           " - similarity:", job["similarity"])
+
+    # print("case 3")
+
+    # result_3 = case3(user_id)
+    # for job in result_3:
+    #     print(job["title"],
+    #           " - mean rating:", job["mean_rating"])
+
+    # print("case 4")
+
+    # result_4 = case4(user_id)
+    # for job in result_4:
+    #     print(job["title"],
+    #           " - page rank score:", job["page_rank_score"])
+
     match case:
         case "case-1":  # case-1: user chưa đủ tương tác và chưa có CV ==> Hot Job
-            print("case-1")
+            # print("case-1")
             result = recommendHotJob()
 
             for job in result:
                 print(job["title"],
-                      " - interaction-score:", job["interaction_score"])
+                      " - Interaction Score:", job["interaction_score"])
         case "case-2":  # case-2: user chưa đủ tương tác và có CV ==> 20% random + 80% CBF
-            print("case-2")
+            # print("case-2")
             result = case2(user_id)
 
             for job in result:
                 print(job["title"],
-                      " - similarity:", job["similarity"])
+                      " - Similarity:", job["similarity"])
         case "case-3":  # case-3: user đủ tương tác và chưa có CV ===> 20% random + 80% CF
-            print("case-3")
+            # print("case-3")
 
             result = case3(user_id)
             for job in result:
                 print(job["title"],
-                      " - mean rating:", job["mean_rating"])
+                      " - Mean Rating:", job["mean_rating"])
 
         case "case-4":  # case-4: user đủ tương tác và có CV ===> 20% random + 80% PageRank
-            print("case-4")
+            # print("case-4")
 
             result = case4(user_id)
 
             for job in result:
                 print(job["title"],
-                      " - page rank score:", job["page_rank_score"])
+                      " - Page Rank Score:", job["page_rank_score"])
         case _:
             print("default")
 
     return Response(result)
 
 
+@api_view(['GET'])
+def getHopeJob(request):
+
+    ndcg_res = []
+
+    user_id_random = random.sample(range(1, 146), 145)
+    # print("user_id_random:", user_id_random)
+
+    # for type in ["cbf"]:
+    for k in range(1, 9):
+        print("k: ", k)
+
+        for type in ["cbf", "cf", "hybrid"]:
+            print("type:", type)
+            res = []
+
+            for user_id in user_id_random:
+                # for user_id in range(1, 146):
+
+                # print("user_id:", user_id)
+                result = getJobIds(user_id, type)
+
+                hope_jobs = HopeJobs.objects.get(
+                    user=user_id).hope_jobs.split(',')
+
+                hope_jobs = [int(job_id) for job_id in hope_jobs]
+
+                job_ids = [job['id'] for job in result][:k]
+
+                res.append({
+                    "user_id": user_id,
+                    "job_ids": ",".join([str(elem) for elem in job_ids]),
+                    "ndcg": ndcg(hope_jobs, job_ids, k)
+                })
+
+            average_ndcg = sum([r['ndcg'] for r in res]) / len(res)
+
+            ndcg_res.append({
+                "type": type,
+                "average_ndcg": average_ndcg,
+                "res": res
+            })
+
+            print("average_ndcg:", k, " ,", average_ndcg)
+
+    return Response(ndcg_res)
+
+
+def getJobIds(user_id, type):
+    cbf_recommend = []
+    cf_recommend = []
+
+    if (type == "cf"):
+        cbf_recommend = []
+        cf_recommend = cf(user_id)
+    elif (type == "cbf"):
+        cbf_recommend = cbf(user_id)
+        cf_recommend = []
+    elif (type == "hybrid"):
+        cbf_recommend = cbf(user_id)
+        cf_recommend = cf(user_id)
+
+    page_rank_recommend = calcPageRank(cbf_recommend, cf_recommend)
+
+    page_rank_recommend_sort = sorted(
+        page_rank_recommend.items(), key=lambda x: x[1], reverse=True)
+
+    page_rank_recommend_ids = [job_id for job_id,
+                               rank in page_rank_recommend_sort][:16]
+
+    job_ids = Jobs.objects.values_list('id', flat=True)
+
+    random_recommend_ids = randomRecommends(job_ids, page_rank_recommend_ids)
+
+    # recommend_ids = page_rank_recommend_ids + random_recommend_ids
+    recommend_ids = page_rank_recommend_ids
+
+    job_recommends = Jobs.objects.filter(id__in=recommend_ids)
+
+    res = []
+
+    for job in job_recommends:
+        d = {
+            "id": job.id,
+            "title": job.title,
+        }
+
+        d["page_rank_score"] = - \
+            999 if job.id in random_recommend_ids else page_rank_recommend[job.id]
+        res.append(d)
+
+    res_sorted = sorted(
+        res, key=lambda k: k['page_rank_score'], reverse=True)
+
+    return res_sorted
+
+
 def checkCase(user_id):
+
     resume = Resumes.objects.filter(user=user_id)
     interactions = UserInteractionJobs.objects.filter(user=user_id)
 
@@ -96,8 +217,11 @@ def calcPageRank(cbf_recommend_list: list, cf_recommend):
     for job in cbf_recommend_list:
         cbf_recommend[job['id']] = job['similarity']
 
-    cbf_recommend_ids = list(cbf_recommend.keys())
-    cf_recommend_ids = list(cf_recommend.keys())
+    cbf_recommend_ids = list(cbf_recommend.keys()) if len(
+        cbf_recommend) != 0 else []
+
+    cf_recommend_ids = list(cf_recommend.keys()) if len(
+        cf_recommend) != 0 else []
 
     recommend_ids = set(cbf_recommend_ids + cf_recommend_ids)
 
@@ -113,13 +237,18 @@ def calcPageRank(cbf_recommend_list: list, cf_recommend):
     PR_CBF = 1 - d
     PR_CF = 1 - d
 
-    sum_weight_cbf = 0
-    sum_weight_cf = 0
+    sum_weight_cbf = 0.000000000000001
+    sum_weight_cf = 0.000000000000001
 
     PR = {}
 
-    sum_weight_cbf = sum(cbf_recommend.values())
-    sum_weight_cf = sum(cf_recommend.values())
+    if (len(cbf_recommend) != 0):
+        sum_weight_cbf = sum(cbf_recommend.values()) if sum(
+            cbf_recommend.values()) != 0 else 0.000000000000001
+
+    if (len(cf_recommend) != 0):
+        sum_weight_cf = sum(cf_recommend.values()) if sum(
+            cf_recommend.values()) != 0 else 0.000000000000001
 
     # print("sum_weight_cbf", sum_weight_cbf)
     # print("sum_weight_cf", sum_weight_cf)
@@ -317,3 +446,25 @@ def objJob(job: Jobs):
         "job_skills": job.jobskills_set.all().values('m_skill__id', 'm_skill__name'),
 
     }
+
+
+def ndcg(recommend_ids, job_ids, k):
+    if len(recommend_ids) == 0:
+        return 0
+
+    if len(job_ids) == 0:
+        return 0
+
+    if len(recommend_ids) > k:
+        recommend_ids = recommend_ids[:k]
+
+    dcg = 0.00000000001
+    for i in range(len(recommend_ids)):
+        if recommend_ids[i] in job_ids:
+            dcg += 1 / math.log2(i + 2)
+
+    idcg = 0.00000000001
+    for i in range(len(job_ids)):
+        idcg += 1 / math.log2(i + 2)
+
+    return dcg / idcg

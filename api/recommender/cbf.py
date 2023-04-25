@@ -21,6 +21,9 @@ def cbf(user_id):
     resume = getResumeById(user_id)
     jobs = getJobForResume(resume)
 
+    if (len(jobs) == 0):
+        return []
+
     resume_skill = resume['resume_skills']
 
     resume_skill_ids = [skill['m_skill__id'] for skill in resume_skill]
@@ -67,28 +70,35 @@ def similarity_cbf(resume_skill_ids, job_skill_ids):
 
 def getResumeById(user_id):
 
-    resume = Resumes.objects.get(user=user_id)
+    try:
+        resume = Resumes.objects.get(user=user_id)
 
-    resumeSkills = resume.resumeskills_set.all()
+        resumeSkills = resume.resumeskills_set.all()
 
-    data = {
-        "id": resume.id,
-        "title": resume.title,
-        "name": resume.name,
+        data = {
+            "id": resume.id,
+            "title": resume.title,
+            "name": resume.name,
 
-        "user_id": resume.user.id,
-        "m_location_id": resume.m_location.id,
-        "m_education_level_id": resume.m_education_level.id,
-        "m_experience_id": resume.m_experience.id,
-        "m_working_form_id": resume.m_working_form.id,
+            "user_id": resume.user.id,
+            "m_location_id": resume.m_location.id,
+            "m_education_level_id": resume.m_education_level.id,
+            "m_experience_id": resume.m_experience.id,
+            "m_working_form_id": resume.m_working_form.id,
 
-        "resume_skills": resumeSkills.values('m_skill__id', 'm_skill__name'),
-    }
+            "resume_skills": resumeSkills.values('m_skill__id', 'm_skill__name'),
+        }
 
-    return data
+        return data
+
+    except Resumes.DoesNotExist:
+        return {}
 
 
 def getJobForResume(resume):
+
+    if (resume.get('m_location_id') is None or resume.get('m_working_form_id') is None or resume.get('m_education_level_id') is None or resume.get('m_experience_id') is None):
+        return []
 
     jobs = Jobs.objects.filter(
         m_location=resume['m_location_id'],
