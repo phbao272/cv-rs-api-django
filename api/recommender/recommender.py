@@ -10,7 +10,7 @@ from rest_framework.response import Response
 
 from api.models import HopeJobs, Jobs, Resumes, UserInteractionJobs
 
-from .cbf import cbf
+from .cbf import cbf, printND
 from .cf import cf
 
 
@@ -71,8 +71,9 @@ def getRecommend(request):
             result = case4(user_id)
 
             for job in result:
-                print(job["title"],
-                      " - Page Rank Score:", job["page_rank_score"])
+                if job["page_rank_score"] > 0:
+                    print(job["title"],
+                          " - Page Rank Score:", job["page_rank_score"])
         case _:
             print("default")
 
@@ -81,16 +82,40 @@ def getRecommend(request):
 
 @api_view(['GET'])
 def getHopeJob(request):
+    # case = {
+    #     "case-1": [],
+    #     "case-2": [],
+    #     "case-3": [],
+    #     "case-4": [],
+
+    #     "case-1-length": 0,
+    #     "case-2-length": 0,
+    #     "case-3-length": 0,
+    #     "case-4-length": 0,
+    # }
+
+    # for user_id in range(1, 146):
+
+    #     case[checkCase(user_id)].append(user_id)
+
+    # case["case-1-length"] = len(case["case-1"])
+    # case["case-2-length"] = len(case["case-2"])
+    # case["case-3-length"] = len(case["case-3"])
+    # case["case-4-length"] = len(case["case-4"])
+
+    # return Response(case)
 
     ndcg_res = []
 
-    user_id_random = random.sample(range(1, 146), 145)
+    # user_id_random = random.sample(range(1, 146), 145)
+    user_id_random = range(1, 146)
     # print("user_id_random:", user_id_random)
 
     # for type in ["cbf"]:
-    for k in range(1, 9):
+    for k in range(3, 9):
         print("k: ", k)
 
+        # for type in ["cf"]:
         for type in ["cbf", "cf", "hybrid"]:
             print("type:", type)
             res = []
@@ -110,21 +135,22 @@ def getHopeJob(request):
 
                 res.append({
                     "user_id": user_id,
-                    "job_ids": ",".join([str(elem) for elem in job_ids]),
+                    "job_recommend_ids": ",".join([str(elem) for elem in job_ids]),
+                    "job_hope_ids": hope_jobs,
                     "ndcg": ndcg(hope_jobs, job_ids, k)
                 })
 
             average_ndcg = sum([r['ndcg'] for r in res]) / len(res)
 
-            ndcg_res.append({
-                "type": type,
-                "average_ndcg": average_ndcg,
-                "res": res
-            })
+            # ndcg_res.append({
+            #     "type": type,
+            #     "average_ndcg": average_ndcg,
+            #     "res": res
+            # })
 
-            print("average_ndcg:", k, " ,", average_ndcg)
+            print("average_ndcg:", k, " ,", printND(k, type))
 
-    return Response(ndcg_res)
+    return Response("DONE")
 
 
 def getJobIds(user_id, type):

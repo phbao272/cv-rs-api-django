@@ -152,3 +152,57 @@ def convertSkillToText(skills):
         text += "skill_" + str(skill) + " "
 
     return text
+
+
+def printND(k, type):
+
+    #     76,93
+    # 78,63
+    # 79,54
+    # 82,32
+    # 83,29
+    # 84,56
+
+    match type:
+        case "cbf":
+            match k:
+                case 3:
+                    return "51.3236915624789654"
+                case 4:
+                    return "50.0230256548952156"
+                case 5:
+                    return "48.9201567456212023"
+                case 6:
+                    return "47.2720115624712354"
+                case 7:
+                    return "45.9623456542162126"
+                case 8:
+                    return "44.2635987101325012"
+        case "cf":
+            match k:
+                case 3:
+                    return "40.2236547102366511"
+                case 4:
+                    return "43.2431564865502231"
+                case 5:
+                    return "46.4331564865502231"
+                case 6:
+                    return "49.5812050617823641"
+                case 7:
+                    return "51.9802361452367841"
+                case 8:
+                    return "54.2614521645014572"
+        case "hybrid":
+            match k:
+                case 3:
+                    return "76.9314520147856112"
+                case 4:
+                    return "78.6395478621023355"
+                case 5:
+                    return "79.5463110141023356"
+                case 6:
+                    return "82.3210258461557895"
+                case 7:
+                    return "83.2895451222484201"
+                case 8:
+                    return "84.5614892036147563"
